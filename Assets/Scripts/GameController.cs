@@ -49,14 +49,13 @@ public class GameController : MonoBehaviour
     {
         OnDie.AddListener(() =>
             {
-                Camera.main.cullingMask ^= 1<<LayerMask.NameToLayer("Dots");
-                spawner.StopAllCoroutines();
-                Invoke("toMenu", 2.5f);
+                Time.timeScale = 0;
             });
     }
 
-    void toMenu()
+    public void replay()
     {
-        Application.LoadLevel("menu");
+        Time.timeScale = 1;
+        Application.LoadLevel("game");
     }
 }
