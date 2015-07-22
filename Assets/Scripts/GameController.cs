@@ -16,7 +16,7 @@ public class GameController : MonoBehaviour
     public Spawner spawner;
     public Text scoreText;
     public Hearts hearts;
-    public int colors = 2;
+    public int activeColors = 2;
 
     public UnityEvent OnAddColor;
     public UnityEvent OnDie;
@@ -38,7 +38,7 @@ public class GameController : MonoBehaviour
 
     public void AddColor()
     {
-        colors = Mathf.Min(colors + 1, color.Length);
+        activeColors = Mathf.Min(activeColors + 1, color.Length);
         if(OnAddColor != null)
         {
             OnAddColor.Invoke();

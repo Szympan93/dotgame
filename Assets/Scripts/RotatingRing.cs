@@ -13,32 +13,16 @@ public class RotatingRing : MonoBehaviour
     private Coroutine rotateCoroutine;
     private float angle;
 
-	public bool isRotating
-    {
-        set
-        {
-            if(value)
-            {
-                if(rotateCoroutine == null)
-                {
-                    rotateCoroutine = StartCoroutine(rotate());
-                }
-            }else
-            {
-                if(rotateCoroutine != null)
-                {
-                    StopCoroutine(rotateCoroutine);
-                    rotateCoroutine = null;
-                }
-            }
-        }
-    }
+    public bool rotating{get;set;}
 
     private IEnumerator rotate()
     {
         while(true)
         {
-            angle += Time.deltaTime * speed;
+            if (rotating)
+            {
+                angle += Time.deltaTime * speed;
+            }
             transform.rotation = Quaternion.Euler(0, 0, angle);
             yield return null;
         }
@@ -46,18 +30,13 @@ public class RotatingRing : MonoBehaviour
 
     public void Start()
     {
-        for (int i = 0; i < GameController.instance.colors; i++ )
+        for (int i = 0; i < GameController.instance.activeColors; i++ )
         {
-            Image img = Instantiate(ringPrefab).GetComponent<Image>();
-            img.transform.SetParent(transform, false);
-
-            img.color = GameController.instance.color[i];
-            img.fillAmount = 1f / GameController.instance.colors;
-            img.transform.rotation = Quaternion.Euler(Vector3.forward * 360f / GameController.instance.colors * i);
-
-            ringParts.Add(img);
+            addFragment();
         }
-        GameController.instance.OnAddColor.AddListener(addColor);
+
+        StartCoroutine(rotate());
+        GameController.instance.OnAddColor.AddListener(addFragment);
     }
 
     public float getDeltaAngle(Vector2 other)
@@ -80,34 +59,25 @@ public class RotatingRing : MonoBehaviour
 
     private bool inColorRange(float angle, int color)
     {
-        float min = 360f / GameController.instance.colors * color;
-        min -= 180;
-        float max = 360f / GameController.instance.colors * (color + 1);
-        max -= 180;
+        float min = 360f / GameController.instance.activeColors * color - 180;
+        float max = 360f / GameController.instance.activeColors * (color + 1) - 180;
         return (angle >= min && angle < max);
     }
 
-    public void addColor()
+    public void addFragment()
     {
-        Quaternion old = transform.rotation;
-        transform.rotation = Quaternion.identity;
-        Image img;
-        int i;
-        for (i = 0; i < GameController.instance.colors - 1; i++)
+        if(GameController.instance.color.Length <= ringParts.Count)
+            return;
+
+        Image part = Instantiate(ringPrefab).GetComponent<Image>();
+        part.transform.SetParent(transform, false);
+
+        part.color = GameController.instance.color[ringParts.Count];
+        ringParts.Add(part);
+        for (int i = 0; i < ringParts.Count; i++)
         {
-            ringParts[i].fillAmount = 1f / GameController.instance.colors;
-            ringParts[i].transform.rotation = Quaternion.Euler(Vector3.forward * 360f / GameController.instance.colors * i);
+            ringParts[i].fillAmount = 1f / ringParts.Count;
+            ringParts[i].transform.rotation = Quaternion.Euler(Vector3.forward * (angle + 360f * ringParts[i].fillAmount * i));
         }
-
-        img = Instantiate(ringPrefab).GetComponent<Image>();
-        img.transform.SetParent(transform, false);
-
-        img.color = GameController.instance.color[i];
-        img.fillAmount = 1f / GameController.instance.colors;
-        img.transform.rotation = Quaternion.Euler(Vector3.forward * 360f / GameController.instance.colors * i);
-
-        ringParts.Add(img);
-
-        transform.rotation = old;
     }
 }
